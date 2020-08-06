@@ -11,6 +11,7 @@
 
 #include "base/callback_helpers.h"
 #include "base/location.h"
+#include "base/logging.h"
 #include "base/memory/ptr_util.h"
 #include "base/optional.h"
 #include "base/single_thread_task_runner.h"
@@ -681,6 +682,8 @@ void OffScreenRenderWidgetHostView::CompositeFrame(
   gfx::Size size_in_pixels = SizeInPixels();
 
   SkBitmap frame;
+
+  DLOG(WARNING) << "CompositeFrame hit";
 
   // Optimize for the case when there is no popup
   if (proxy_views_.size() == 0 && !popup_host_view_) {
