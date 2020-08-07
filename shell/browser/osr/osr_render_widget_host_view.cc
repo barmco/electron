@@ -683,8 +683,6 @@ void OffScreenRenderWidgetHostView::CompositeFrame(
 
   SkBitmap frame;
 
-  DLOG(WARNING) << "CompositeFrame hit";
-
   // Optimize for the case when there is no popup
   if (proxy_views_.size() == 0 && !popup_host_view_) {
     frame = GetBacking();
@@ -949,6 +947,15 @@ OffScreenRenderWidgetHostView::GetLocalSurfaceIdAllocation() const {
 content::DelegatedFrameHost*
 OffScreenRenderWidgetHostView::GetDelegatedFrameHost() const {
   return delegated_frame_host_.get();
+}
+
+std::string OffScreenRenderWidgetHostView::GetExternalSharedMemoryEndpoint()
+    const {
+  if (host_display_client_) {
+    return host_display_client_->GetExternalSharedMemoryEndpoint();
+  }
+
+  return "";
 }
 
 void OffScreenRenderWidgetHostView::SetupFrameRate(bool force) {

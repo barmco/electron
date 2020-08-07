@@ -194,6 +194,7 @@ class OffScreenRenderWidgetHostView : public content::RenderWidgetHostViewBase,
   ui::Layer* GetRootLayer() const;
 
   content::DelegatedFrameHost* GetDelegatedFrameHost() const;
+  std::string GetExternalSharedMemoryEndpoint() const;
 
   void Invalidate();
   void InvalidateBounds(const gfx::Rect&);

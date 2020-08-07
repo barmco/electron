@@ -4,7 +4,11 @@
 
 #include "shell/browser/osr/osr_host_display_client.h"
 
+#include <cstring>
 #include <utility>
+
+#include "base/rand_util.h"
+#include "base/strings/string_number_conversions.h"
 
 #include "components/viz/common/resources/resource_format.h"
 #include "components/viz/common/resources/resource_sizes.h"
@@ -36,6 +40,7 @@ void LayeredWindowUpdater::OnAllocatedSharedMemory(
     const gfx::Size& pixel_size,
     base::UnsafeSharedMemoryRegion region) {
   canvas_.reset();
+  shm_external_.reset();
 
   if (!region.IsValid())
     return;
@@ -53,6 +58,9 @@ void LayeredWindowUpdater::OnAllocatedSharedMemory(
       region.GetPlatformHandle(), skia::CRASH_ON_FAILURE);
 #else
   shm_mapping_ = region.Map();
+  shm_external_ = std::make_unique<barmco::SHM>(
+      base::NumberToString(base::RandUint64()) + "osr", expected_bytes);
+
   if (!shm_mapping_.IsValid()) {
     DLOG(ERROR) << "Failed to map shared memory region";
     return;
@@ -71,6 +79,9 @@ void LayeredWindowUpdater::Draw(const gfx::Rect& damage_rect,
 
   if (active_ && canvas_->peekPixels(&pixmap)) {
     bitmap.installPixels(pixmap);
+    memcpy(static_cast<void*>(shm_external_->Data()), bitmap.getPixels(),
+           bitmap.computeByteSize());
+
     callback_.Run(damage_rect, bitmap);
   }
 
@@ -88,6 +99,12 @@ void OffScreenHostDisplayClient::SetActive(bool active) {
   if (layered_window_updater_) {
     layered_window_updater_->SetActive(active_);
   }
+}
+
+std::string OffScreenHostDisplayClient::GetExternalSharedMemoryEndpoint() {
+  return layered_window_updater_ != nullptr
+             ? layered_window_updater_->shm_external_->Path()
+             : "";
 }
 
 void OffScreenHostDisplayClient::IsOffscreen(IsOffscreenCallback callback) {

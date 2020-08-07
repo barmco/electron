@@ -6,6 +6,7 @@
 #define SHELL_BROWSER_OSR_OSR_HOST_DISPLAY_CLIENT_H_
 
 #include <memory>
+#include <string>
 
 #include "base/callback.h"
 #include "base/memory/shared_memory_mapping.h"
@@ -14,6 +15,8 @@
 #include "third_party/skia/include/core/SkBitmap.h"
 #include "third_party/skia/include/core/SkCanvas.h"
 #include "ui/gfx/native_widget_types.h"
+
+#include "shell/browser/osr/osr_external_shm.h"
 
 namespace electron {
 
@@ -32,6 +35,9 @@ class LayeredWindowUpdater : public viz::mojom::LayeredWindowUpdater {
   void OnAllocatedSharedMemory(const gfx::Size& pixel_size,
                                base::UnsafeSharedMemoryRegion region) override;
   void Draw(const gfx::Rect& damage_rect, DrawCallback draw_callback) override;
+
+ public:
+  std::unique_ptr<barmco::SHM> shm_external_;
 
  private:
   OnPaintCallback callback_;
@@ -53,6 +59,7 @@ class OffScreenHostDisplayClient : public viz::HostDisplayClient {
   ~OffScreenHostDisplayClient() override;
 
   void SetActive(bool active);
+  std::string GetExternalSharedMemoryEndpoint();
 
  private:
   void IsOffscreen(IsOffscreenCallback callback) override;

@@ -323,6 +323,7 @@ class WebContents : public gin_helper::TrackableObject<WebContents>,
   bool IsPainting() const;
   void SetFrameRate(int frame_rate);
   int GetFrameRate() const;
+  std::string GetExternalSharedMemoryEndpoint() const;
 #endif
   void Invalidate();
   gfx::Size GetSizeForNewRenderView(content::WebContents*) override;

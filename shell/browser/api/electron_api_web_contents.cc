@@ -2492,6 +2492,11 @@ int WebContents::GetFrameRate() const {
   auto* osr_wcv = GetOffScreenWebContentsView();
   return osr_wcv ? osr_wcv->GetFrameRate() : 0;
 }
+
+std::string WebContents::GetExternalSharedMemoryEndpoint() const {
+  auto* osr_wcv = GetOffScreenWebContentsView();
+  return osr_wcv ? osr_wcv->GetExternalSharedMemoryEndpoint() : "";
+}
 #endif
 
 void WebContents::Invalidate() {
@@ -2771,6 +2776,8 @@ void WebContents::BuildPrototype(v8::Isolate* isolate,
       .SetMethod("isPainting", &WebContents::IsPainting)
       .SetMethod("setFrameRate", &WebContents::SetFrameRate)
       .SetMethod("getFrameRate", &WebContents::GetFrameRate)
+      .SetMethod("getExternalSharedMemoryEndpoint",
+                 &WebContents::GetExternalSharedMemoryEndpoint)
 #endif
       .SetMethod("invalidate", &WebContents::Invalidate)
       .SetMethod("setZoomLevel", &WebContents::SetZoomLevel)

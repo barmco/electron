@@ -65,6 +65,10 @@ gfx::Size OffScreenWebContentsView::GetSize() {
   return native_window_ ? native_window_->GetSize() : gfx::Size();
 }
 
+std::string OffScreenWebContentsView::GetExternalSharedMemoryEndpoint() const {
+  return GetView() ? GetView()->GetExternalSharedMemoryEndpoint() : "";
+}
+
 #if !defined(OS_MACOSX)
 gfx::NativeView OffScreenWebContentsView::GetNativeView() const {
   if (!native_window_)

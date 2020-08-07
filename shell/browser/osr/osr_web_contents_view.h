@@ -5,6 +5,8 @@
 #ifndef SHELL_BROWSER_OSR_OSR_WEB_CONTENTS_VIEW_H_
 #define SHELL_BROWSER_OSR_OSR_WEB_CONTENTS_VIEW_H_
 
+#include <string>
+
 #include "shell/browser/native_window.h"
 #include "shell/browser/native_window_observer.h"
 
@@ -38,6 +40,7 @@ class OffScreenWebContentsView : public content::WebContentsView,
   void OnWindowClosed() override;
 
   gfx::Size GetSize();
+  std::string GetExternalSharedMemoryEndpoint() const;
 
   // content::WebContentsView:
   gfx::NativeView GetNativeView() const override;
