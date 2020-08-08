@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+#include "shell/browser/osr/osr_external_shm.h"
+
 #include "base/callback.h"
 #include "base/memory/weak_ptr.h"
 #include "components/viz/host/client_frame_sink_video_capturer.h"
@@ -30,6 +32,8 @@ class OffScreenVideoConsumer : public viz::mojom::FrameSinkVideoConsumer {
   void SetFrameRate(int frame_rate);
   void SizeChanged();
 
+  barmco::SHM* GetExternalSharedMemory() const;
+
  private:
   // viz::mojom::FrameSinkVideoConsumer implementation.
   void OnFrameCaptured(
@@ -42,11 +46,13 @@ class OffScreenVideoConsumer : public viz::mojom::FrameSinkVideoConsumer {
   void OnLog(const std::string& message) override;
 
   bool CheckContentRect(const gfx::Rect& content_rect);
+  bool CheckExternalSharedMemoryHasMarked() const;
 
   OnPaintCallback callback_;
 
   OffScreenRenderWidgetHostView* view_;
   std::unique_ptr<viz::ClientFrameSinkVideoCapturer> video_capturer_;
+  std::unique_ptr<barmco::SHM> shm_external_;
 
   base::WeakPtrFactory<OffScreenVideoConsumer> weak_ptr_factory_;
 

@@ -654,9 +654,13 @@ bool OffScreenRenderWidgetHostView::UpdateNSViewAndDisplay() {
 
 void OffScreenRenderWidgetHostView::OnPaint(const gfx::Rect& damage_rect,
                                             const SkBitmap& bitmap) {
-  backing_ = std::make_unique<SkBitmap>();
-  backing_->allocN32Pixels(bitmap.width(), bitmap.height(), !transparent_);
-  bitmap.readPixels(backing_->pixmap());
+  // not use plain bitmap transfer pipeline
+  // traditional bitmap pipeline (by recevied from "paint" event) has heavy
+  // performance issue on external use case
+
+  // backing_ = std::make_unique<SkBitmap>();
+  // backing_->allocN32Pixels(bitmap.width(), bitmap.height(), !transparent_);
+  // bitmap.readPixels(backing_->pixmap());
 
   if (IsPopupWidget() && parent_callback_) {
     parent_callback_.Run(this->popup_position_);
@@ -679,42 +683,44 @@ void OffScreenRenderWidgetHostView::CompositeFrame(
     const gfx::Rect& damage_rect) {
   HoldResize();
 
-  gfx::Size size_in_pixels = SizeInPixels();
+  // gfx::Size size_in_pixels = SizeInPixels();
 
-  SkBitmap frame;
+  // SkBitmap frame;
 
   // Optimize for the case when there is no popup
   if (proxy_views_.size() == 0 && !popup_host_view_) {
-    frame = GetBacking();
+    // frame = GetBacking();
   } else {
-    frame.allocN32Pixels(size_in_pixels.width(), size_in_pixels.height(),
-                         false);
+    // frame.allocN32Pixels(size_in_pixels.width(), size_in_pixels.height(),
+    //                      false);
     if (!GetBacking().drawsNothing()) {
-      SkCanvas canvas(frame);
-      canvas.writePixels(GetBacking(), 0, 0);
+      // SkCanvas canvas(frame);
+      // canvas.writePixels(GetBacking(), 0, 0);
 
-      if (popup_host_view_ && !popup_host_view_->GetBacking().drawsNothing()) {
-        gfx::Rect rect = popup_host_view_->popup_position_;
-        gfx::Point origin_in_pixels = gfx::ConvertPointToPixel(
-            current_device_scale_factor_, rect.origin());
-        canvas.writePixels(popup_host_view_->GetBacking(), origin_in_pixels.x(),
-                           origin_in_pixels.y());
-      }
+      // if (popup_host_view_ && !popup_host_view_->GetBacking().drawsNothing())
+      // {
+      //   gfx::Rect rect = popup_host_view_->popup_position_;
+      //   gfx::Point origin_in_pixels = gfx::ConvertPointToPixel(
+      //       current_device_scale_factor_, rect.origin());
+      //   canvas.writePixels(popup_host_view_->GetBacking(),
+      //   origin_in_pixels.x(),
+      //                      origin_in_pixels.y());
+      // }
 
-      for (auto* proxy_view : proxy_views_) {
-        gfx::Rect rect = proxy_view->GetBounds();
-        gfx::Point origin_in_pixels = gfx::ConvertPointToPixel(
-            current_device_scale_factor_, rect.origin());
-        canvas.writePixels(*proxy_view->GetBitmap(), origin_in_pixels.x(),
-                           origin_in_pixels.y());
-      }
+      // for (auto* proxy_view : proxy_views_) {
+      //   gfx::Rect rect = proxy_view->GetBounds();
+      //   gfx::Point origin_in_pixels = gfx::ConvertPointToPixel(
+      //       current_device_scale_factor_, rect.origin());
+      //   canvas.writePixels(*proxy_view->GetBitmap(), origin_in_pixels.x(),
+      //                      origin_in_pixels.y());
+      // }
     }
   }
 
-  paint_callback_running_ = true;
-  callback_.Run(gfx::IntersectRects(gfx::Rect(size_in_pixels), damage_rect),
-                frame);
-  paint_callback_running_ = false;
+  // paint_callback_running_ = true;
+  // callback_.Run(gfx::IntersectRects(gfx::Rect(size_in_pixels), damage_rect),
+  //               frame);
+  // paint_callback_running_ = false;
 
   ReleaseResize();
 }
@@ -951,8 +957,9 @@ OffScreenRenderWidgetHostView::GetDelegatedFrameHost() const {
 
 std::string OffScreenRenderWidgetHostView::GetExternalSharedMemoryEndpoint()
     const {
-  if (host_display_client_) {
-    return host_display_client_->GetExternalSharedMemoryEndpoint();
+  if (video_consumer_) {
+    auto* shm = video_consumer_->GetExternalSharedMemory();
+    return shm == nullptr ? "" : shm->Path();
   }
 
   return "";

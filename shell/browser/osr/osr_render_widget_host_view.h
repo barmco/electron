@@ -252,7 +252,7 @@ class OffScreenRenderWidgetHostView : public content::RenderWidgetHostViewBase,
   bool hold_resize_ = false;
   bool pending_resize_ = false;
 
-  bool paint_callback_running_ = false;
+  // bool paint_callback_running_ = false;
 
   viz::LocalSurfaceIdAllocation delegated_frame_host_allocation_;
   viz::ParentLocalSurfaceIdAllocator delegated_frame_host_allocator_;

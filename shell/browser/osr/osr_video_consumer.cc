@@ -4,8 +4,13 @@
 
 #include "shell/browser/osr/osr_video_consumer.h"
 
+#include <cstring>
+#include <memory>
 #include <utility>
 
+#include "base/logging.h"
+#include "base/rand_util.h"
+#include "base/strings/string_number_conversions.h"
 #include "media/base/video_frame_metadata.h"
 #include "media/capture/mojom/video_capture_types.mojom.h"
 #include "shell/browser/osr/osr_render_widget_host_view.h"
@@ -48,6 +53,10 @@ void OffScreenVideoConsumer::SizeChanged() {
   video_capturer_->SetResolutionConstraints(view_->SizeInPixels(),
                                             view_->SizeInPixels(), true);
   video_capturer_->RequestRefreshFrame();
+}
+
+barmco::SHM* OffScreenVideoConsumer::GetExternalSharedMemory() const {
+  return shm_external_.get();
 }
 
 void OffScreenVideoConsumer::OnFrameCaptured(
@@ -112,6 +121,31 @@ void OffScreenVideoConsumer::OnFrameCaptured(
       new FramePinner{std::move(mapping), callbacks_remote.Unbind()});
   bitmap.setImmutable();
 
+  // barmco: expose-osr-frame-ext-shared-mem
+  // shared memory section's start 1 byte represents transfer state
+  // 0x00 mean not transferred (do not transfer bitmap to shared memory section)
+  // 0xFF mean transferred (reset mark, and transfer bitmap to shared memory
+  // section)
+
+  if (shm_external_.get() == nullptr ||
+      bitmap.computeByteSize() != shm_external_->Size() - 1) {
+    LOG(INFO) << "shm_external refreshed: " << shm_external_->Path();
+
+    shm_external_.reset(
+        new barmco::SHM(base::NumberToString(base::RandUint64()) + "-osr",
+                        bitmap.computeByteSize() + 1));
+    shm_external_->Create();
+    memset(shm_external_->Data(), 0xFF, 1);
+  }
+
+  if (CheckExternalSharedMemoryHasMarked()) {
+    uint8_t* base = shm_external_->Data();
+    memset(base, 0x00, 1);
+    memcpy(static_cast<void*>(base + 1), pixels, bitmap.computeByteSize());
+  }
+
+  // barmco: expose-osr-frame-ext-shared-mem
+
   media::VideoFrameMetadata metadata;
   metadata.MergeInternalValuesFrom(info->metadata);
   gfx::Rect damage_rect;
@@ -141,6 +175,13 @@ bool OffScreenVideoConsumer::CheckContentRect(const gfx::Rect& content_rect) {
   }
 
   return true;
+}
+
+bool OffScreenVideoConsumer::CheckExternalSharedMemoryHasMarked() const {
+  if (shm_external_.get() == nullptr)
+    return true;
+
+  return (*shm_external_->Data() & 0xFF) == 0xFF;
 }
 
 }  // namespace electron
