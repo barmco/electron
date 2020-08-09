@@ -592,7 +592,6 @@ source_set("electron_lib") {
   if (enable_osr) {
     sources += [
       "shell/browser/osr/osr_external_shm.h",
-      "shell/browser/osr/osr_external_shm_mac.cc",
       "shell/browser/osr/osr_host_display_client.cc",
       "shell/browser/osr/osr_host_display_client.h",
       "shell/browser/osr/osr_host_display_client_mac.mm",
@@ -611,6 +610,14 @@ source_set("electron_lib") {
       "//services/viz/public/mojom",
       "//ui/compositor",
     ]
+
+    if (is_mac) {
+      sources += [ "shell/browser/osr/osr_external_shm_mac.cc" ]
+    }
+
+    if (is_win) {
+      sources += [ "shell/browser/osr/osr_external_shm_win32.cc" ]
+    }
   }
 
   if (enable_remote_module) {
